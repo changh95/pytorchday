@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>모두의 AI 가속기 - Tenstorrent Blackhole</title>
+    <meta name="description" content="PyTorch KR lightning talk — 모두의 AI 가속기, Tenstorrent Blackhole" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="css/theme.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!--
+          - 기본은 위쪽 정렬(제목이 manim 영상 속 제목과 같은 자리), class="center" 는 세로 가운데 정렬
+          - 이미지가 아직 없으면 경로가 적힌 점선 박스가 대신 보인다 (js/placeholders.js)
+          - 5분 pacing: totalTime 300초를 슬라이드 수로 나눠 발표자 뷰(S)에 표시
+        -->
+
+        <!-- 1. 타이틀 -->
+        <section class="center title">
+          <img class="brand" src="assets/img/logos/tenstorrent.svg" alt="Tenstorrent" />
+          <h1>모두의 AI 가속기</h1>
+          <p class="subtitle">Tenstorrent Blackhole</p>
+          <p class="byline">장형기 · Staff Engineer, Tenstorrent<br />PyTorch KR Lightning Talk · 2026.11.21</p>
+          <aside class="notes">자기소개 한 줄.</aside>
+        </section>
+
+        <!-- 2. Jim Keller -->
+        <section class="center">
+          <div class="person">
+            <figure class="portrait-fig">
+              <img class="portrait" src="assets/img/jim-keller.jpg" alt="Jim Keller 사진" />
+              <figcaption class="credit">Photo: LG Electronics, CC BY 2.0 via Wikimedia Commons</figcaption>
+            </figure>
+            <div>
+              <h1 class="person-name">Jim Keller</h1>
+              <div class="logos">
+                <img src="assets/img/logos/amd.svg" alt="AMD" />
+                <img src="assets/img/logos/tesla.svg" alt="Tesla" />
+                <img src="assets/img/logos/intel.svg" alt="Intel" />
+                <img src="assets/img/logos/apple.svg" alt="Apple" />
+              </div>
+            </div>
+          </div>
+          <aside class="notes">AMD · Tesla · Intel · Apple 을 거친 칩 설계자 → Tenstorrent.</aside>
+        </section>
+
+        <!-- 3. Blackhole 카드 -->
+        <section class="center">
+          <div class="products">
+            <figure>
+              <img src="assets/img/p100a.jpg" alt="Blackhole p100a 사진" />
+              <figcaption>Blackhole p100a</figcaption>
+              <p class="price">$999</p>
+              <p class="spec">28 GB GDDR6 · 448 GB/s</p>
+            </figure>
+            <figure>
+              <img src="assets/img/p150a.jpg" alt="Blackhole p150a 사진" />
+              <figcaption>Blackhole p150a</figcaption>
+              <p class="price">$1,399</p>
+              <p class="spec">32 GB GDDR6 · 512 GB/s</p>
+            </figure>
+          </div>
+          <aside class="notes">PCIe 카드 한 장, 이 가격.</aside>
+        </section>
+
+        <!-- 4. QuietBox 2 / Galaxy -->
+        <section class="center">
+          <div class="products">
+            <figure>
+              <img src="assets/img/quietbox2.jpg" alt="QuietBox 2 사진" />
+              <figcaption>QuietBox 2</figcaption>
+              <p class="price">$9,999</p>
+              <p class="spec">Ryzen CPU · 256 GB DRAM<br />128 GB AI RAM (4 chip)</p>
+            </figure>
+            <figure>
+              <img src="assets/img/galaxy.jpg" alt="Galaxy 사진" />
+              <figcaption>Galaxy</figcaption>
+              <p class="price">$160k</p>
+              <p class="spec">1 TB AI RAM (32 chip)</p>
+            </figure>
+          </div>
+          <aside class="notes">워크스테이션부터 서버까지.</aside>
+        </section>
+
+        <!-- 5. GPU 메모리 왕복 — manim (클릭 3번) -->
+        <section data-manim="GpuMemory">
+          <aside class="notes">GPU 구조: HBM / L2 / SM(L1).</aside>
+          <aside class="notes">HBM → L2 → L1 → 연산 → L1 → L2 → HBM. 왕복 한 번에도 시간이 든다.</aside>
+          <aside class="notes">LLM 추론은 layer 마다 이 왕복을 반복 → 데이터가 많이 오갈수록 레이턴시가 쌓인다. (강조)</aside>
+        </section>
+
+        <!-- 6. Blackhole NoC — manim (클릭 3번) -->
+        <section data-manim="BlackholeNoC">
+          <aside class="notes">Blackhole 구조: Tensix 코어 그리드 + GDDR6.</aside>
+          <aside class="notes">코어끼리 연결된 Network-on-Chip.</aside>
+          <aside class="notes">NoC 위로 데이터가 코어 ↔ 코어로 직접 이동. (루프 재생 중)</aside>
+        </section>
+
+        <!-- 7. Blackhole layer 할당 data flow — manim (슬라이드 6 마지막 화면에서 이어짐) -->
+        <section data-manim="BlackholeDataflow" data-transition="none" data-background-transition="none">
+          <aside class="notes">코어 묶음마다 layer 를 하나씩 할당.</aside>
+          <aside class="notes">activation 이 NoC 을 타고 다음 layer 로 바로 전달 — 슬라이드 5와 대비.</aside>
+          <aside class="notes">파이프라인처럼 계속 흐른다. (루프 재생 중)</aside>
+        </section>
+
+        <!-- 8. GitHub: 전부 오픈소스 -->
+        <section>
+          <h2>모든 소프트웨어 스택이 오픈소스</h2>
+          <figure class="screenshot">
+            <img src="assets/img/github-tenstorrent.png" alt="github.com/tenstorrent 스크린샷" />
+            <figcaption>github.com/tenstorrent</figcaption>
+          </figure>
+        </section>
+
+        <!-- 9. tenstorrent/skills -->
+        <section>
+          <h2>Claude · GPT 에서 skill 로 바로 다룬다</h2>
+          <figure class="screenshot">
+            <img src="assets/img/github-skills.png" alt="github.com/tenstorrent/skills 스크린샷" />
+            <figcaption>github.com/tenstorrent/skills</figcaption>
+          </figure>
+        </section>
+
+        <!-- 10 ~ 18. 사례 (헤딩만, 내용은 추후) -->
+        <section>
+          <h2>Day-0 model support</h2>
+          <div class="evidence">
+            <figure class="tweet">
+              <img src="assets/img/tweet-day0.png" alt="Tenstorrent X 포스트: MiniMax M3.1 Flash on Tenstorrent Cloud" />
+              <figcaption>x.com/tenstorrent/status/2113452850122776687</figcaption>
+            </figure>
+            <div class="claim">
+              <p>18시간만에 대형 모델 포팅 + 최적화 + OpenRouter 서빙.</p>
+              <p class="accent strong">글로벌 1위 성능</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>LLM (서버)</h2>
+          <div class="shots">
+            <figure class="screenshot">
+              <img src="assets/img/openrouter-tenstorrent.png" alt="OpenRouter 의 Tenstorrent provider 모델 목록" />
+              <figcaption>openrouter.ai/provider/tenstorrent</figcaption>
+            </figure>
+            <figure class="screenshot">
+              <img src="assets/img/newsroom-galaxy-gpt-oss.png" alt="Galaxy reaches industry-leading 5,300 t/s/u decode speed on gpt-oss-120b" />
+              <figcaption>tenstorrent.com/newsroom</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section>
+          <h2>LLM (서버)</h2>
+          <!-- videos/llm/llm.gif 는 현재 1프레임짜리라 이미지로 표시. 움직이는 원본으로 교체 후 make media → <video> 로 바꿀 것 -->
+          <figure class="screenshot">
+            <img src="assets/media/llm/llm.png" alt="Tenstorrent 콘솔 LLM 채팅 데모" />
+          </figure>
+        </section>
+
+        <section>
+          <h2>LLM (카드)</h2>
+          <div class="evidence">
+            <figure class="photo">
+              <img src="assets/img/quietbox2.jpg" alt="QuietBox 2 사진" />
+              <figcaption>QuietBox 2</figcaption>
+            </figure>
+            <div class="claim">
+              <p>Gemma4-31B, Qwen3.8-27B (bf16)</p>
+              <p class="accent strong">100–200 t/s/u</p>
+              <div class="next">
+                <p class="next-title">Strata engine 개발 예정 (Q4)</p>
+                <p class="next-body">Qwen3.8-Flash-Nexxt, DeepSeek v4.1 Flash</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Physical AI (Robotics)</h2>
+          <div class="hero-video">
+            <video data-autoplay muted loop playsinline preload="auto" src="assets/media/physical_ai/robotics/robot1.mp4"></video>
+          </div>
+        </section>
+
+        <section>
+          <h2>Physical AI (Autonomous Driving)</h2>
+          <div class="video-grid">
+            <figure>
+              <video data-autoplay muted loop playsinline preload="auto" src="assets/media/physical_ai/auto/diffusion-planner.mp4"></video>
+              <figcaption>Diffusion Planner</figcaption>
+            </figure>
+            <figure>
+              <video data-autoplay muted loop playsinline preload="auto" src="assets/media/physical_ai/auto/meteor.mp4"></video>
+              <figcaption>METEOR</figcaption>
+            </figure>
+            <figure>
+              <video data-autoplay muted loop playsinline preload="auto" src="assets/media/physical_ai/auto/sceneseg.mp4"></video>
+              <figcaption>SceneSeg</figcaption>
+            </figure>
+            <figure>
+              <video data-autoplay muted loop playsinline preload="auto" src="assets/media/physical_ai/auto/transfusion.mp4"></video>
+              <figcaption>TransFusion</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section>
+          <h2>생성형 AI</h2>
+          <div class="hero-video">
+            <video data-autoplay muted loop playsinline preload="auto" src="assets/media/video_gen/Screen-Recording-2026-10-14-at-10.45.26-AM.mp4"></video>
+          </div>
+        </section>
+
+        <section class="center">
+          <h2 class="centered">그 외로... 모든게 다 됩니다</h2>
+        </section>
+
+        <section>
+          <h2>Graphics 연산 지원</h2>
+          <figure class="hero-video captioned">
+            <video data-autoplay muted loop playsinline preload="auto" src="assets/media/gpu/glxgears_stock_vs_tensix.mp4"></video>
+            <figcaption>OpenGL / Vulkan 지원</figcaption>
+          </figure>
+        </section>
+
+        <section>
+          <h2>로보틱스 학습 구현</h2>
+          <figure class="hero-video captioned">
+            <video data-autoplay muted loop playsinline preload="auto" src="assets/media/robotics_training/g1-3.mp4"></video>
+            <figcaption>MuJoCo + Isaac Sim 호환. <code>rsl_rl</code> / <code>rl_games</code> 포팅 완료</figcaption>
+          </figure>
+        </section>
+
+        <section>
+          <h2>로보틱스 + 물리 시뮬레이터 구현</h2>
+          <div class="video-stack">
+            <video class="wide" data-autoplay muted loop playsinline preload="auto" src="assets/media/robotics_simulator/cartpole_newton_vs_tensix.mp4"></video>
+            <video class="tall" data-autoplay muted loop playsinline preload="auto" src="assets/media/robotics_simulator/g1_tensix_vla_x280_wbc_seed2000.mp4"></video>
+            <p class="stack-caption">MJWarp 시뮬레이터 가속, 물리엔진 포팅 완료</p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+
+    <script src="js/placeholders.js"></script>
+    <!-- manim: manifest(자동 생성) → 슬라이드 펼치기 → Reveal 초기화 순서 유지 -->
+    <script src="assets/anim/manifest.js"></script>
+    <script src="js/manim.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        width: 1280,
+        height: 720,
+        margin: 0, // 슬라이드 영역 = 화면 → manim 영상 속 제목과 HTML 제목 위치가 일치
+        center: false, // 위쪽 정렬. 세로 가운데가 필요한 슬라이드는 class="center"
+        slideNumber: "c/t",
+        transition: "fade",
+        backgroundTransition: "fade",
+        viewDistance: 5, // 다음 슬라이드 배경 영상을 미리 로드
+        totalTime: 300, // 발표자 뷰(S)의 pacing 타이머: 5분
+        plugins: [RevealHighlight, RevealNotes],
+      });
+    </script>
+  </body>
+</html>

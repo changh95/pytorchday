@@ -1,0 +1,25 @@
+{
+  "scene": "GpuMemory",
+  "width": 1920,
+  "height": 1080,
+  "sections": [
+    {
+      "name": "arch",
+      "type": "default.normal",
+      "src": "assets/anim/GpuMemory/00.mp4",
+      "duration": 5.7
+    },
+    {
+      "name": "roundtrip",
+      "type": "default.normal",
+      "src": "assets/anim/GpuMemory/01.mp4",
+      "duration": 6.033008
+    },
+    {
+      "name": "layers",
+      "type": "default.normal",
+      "src": "assets/anim/GpuMemory/02.mp4",
+      "duration": 9.6
+    }
+  ]
+}

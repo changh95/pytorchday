@@ -1,0 +1,15 @@
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+
+# manim 중간 산출물 (최종 영상은 site/assets/anim 에 export 되어 커밋됨)
+/build/
+/media/
+
+# 원본 영상 (make media 로 변환된 사본이 site/assets/media 에 커밋됨)
+/videos/
+
+# misc
+.DS_Store
+.omc/

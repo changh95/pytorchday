@@ -1,0 +1,25 @@
+{
+  "scene": "BlackholeDataflow",
+  "width": 1920,
+  "height": 1080,
+  "sections": [
+    {
+      "name": "assign",
+      "type": "default.normal",
+      "src": "assets/anim/BlackholeDataflow/00.mp4",
+      "duration": 2.1
+    },
+    {
+      "name": "flow",
+      "type": "default.normal",
+      "src": "assets/anim/BlackholeDataflow/01.mp4",
+      "duration": 2.766667
+    },
+    {
+      "name": "stream",
+      "type": "loop",
+      "src": "assets/anim/BlackholeDataflow/02.mp4",
+      "duration": 2.266667
+    }
+  ]
+}

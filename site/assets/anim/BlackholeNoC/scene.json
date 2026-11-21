@@ -1,0 +1,25 @@
+{
+  "scene": "BlackholeNoC",
+  "width": 1920,
+  "height": 1080,
+  "sections": [
+    {
+      "name": "arch",
+      "type": "default.normal",
+      "src": "assets/anim/BlackholeNoC/00.mp4",
+      "duration": 5.1
+    },
+    {
+      "name": "mesh",
+      "type": "default.normal",
+      "src": "assets/anim/BlackholeNoC/01.mp4",
+      "duration": 1.8
+    },
+    {
+      "name": "packets",
+      "type": "loop",
+      "src": "assets/anim/BlackholeNoC/02.mp4",
+      "duration": 3.283333
+    }
+  ]
+}
